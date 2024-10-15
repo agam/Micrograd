@@ -49,3 +49,24 @@ func (l *Layer) Call(inputs []*Value) []*Value {
 	}
 	return outputs
 }
+
+type MLP struct {
+	Layers []*Layer
+}
+
+func NewMLP(numInputs int, numOutputs []int) *MLP {
+	numNeurons := append([]int{numInputs}, numOutputs...)
+	layers := make([]*Layer, len(numNeurons))
+	for i := 0; i < len(numNeurons)-1; i++ {
+		layers[i] = NewLayer(numNeurons[i], numNeurons[i+1])
+	}
+	return &MLP{Layers: layers}
+}
+
+func (m *MLP) Call(inputs []*Value) []*Value {
+	for _, layer := range m.Layers {
+		fmt.Println("Debug: calling ...")
+		inputs = layer.Call(inputs)
+	}
+	return inputs
+}

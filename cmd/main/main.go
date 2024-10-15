@@ -43,6 +43,15 @@ func SimpleLayer() {
 	}
 }
 
+func SimpleMLP() {
+	mlp := m.NewMLP(3, []int{4, 4, 1})
+	x := []*m.Value{m.NewValue(2.0, "x1"), m.NewValue(3.0, "x2"), m.NewValue(-1.0, "x3")}
+	o := mlp.Call(x)
+	for _, v := range o {
+		WriteDot(v)
+	}
+}
+
 func main() {
-	SimpleLayer()
+	SimpleMLP()
 }
