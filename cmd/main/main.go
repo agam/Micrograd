@@ -4,7 +4,7 @@ import (
 	m "github.com/agam/Micrograd"
 )
 
-func main() {
+func simpleNN() {
 	x1 := m.NewValue(2.0, "x1")
 	x2 := m.NewValue(0.0, "x2")
 
@@ -25,4 +25,24 @@ func main() {
 	o.BackProp()
 
 	WriteDot(o)
+}
+
+func SimpleNeuron() {
+	n := m.NewNeuron(2)
+	x := []*m.Value{m.NewValue(2.0, "x1"), m.NewValue(0.0, "x2")}
+	o := n.Call(x)
+	WriteDot(o)
+}
+
+func SimpleLayer() {
+	l := m.NewLayer(2, 3)
+	x := []*m.Value{m.NewValue(2.0, "x1"), m.NewValue(3.0, "x2")}
+	o := l.Call(x)
+	for _, v := range o {
+		WriteDot(v)
+	}
+}
+
+func main() {
+	SimpleLayer()
 }
