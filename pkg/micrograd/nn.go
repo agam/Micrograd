@@ -15,7 +15,9 @@ type Value struct {
 }
 
 func NewValue(data float64, label string) *Value {
-	return &Value{Data: data, Children: []*Value{}, Op: "", Label: label, Grad: 0.0}
+	value := &Value{Data: data, Children: []*Value{}, Op: "", Label: label, Grad: 0.0}
+	value.Backward = func() {}
+	return value
 }
 
 func NewValueWithOp(data float64, children []*Value, op string, label string) *Value {
@@ -42,7 +44,7 @@ func (v *Value) Mul(other *Value, label string) *Value {
 	return out
 }
 
-func (v *Value) Tanh() *Value {
+func (v *Value) Tanh(label string) *Value {
 	x := v.Data
 	t := (math.Exp(2*x) - 1) / (math.Exp(2*x) + 1)
 	out := NewValueWithOp(t, []*Value{v}, " tanh", v.Label)
@@ -50,14 +52,45 @@ func (v *Value) Tanh() *Value {
 		v.Grad += (1 - t*t) * out.Grad
 	}
 	out.Backward = backward
-	out.Children = []*Value{v}
 
 	return out
 }
 
 func (v *Value) String() string {
 	if v.Op == "" {
-		return fmt.Sprintf("Value(%s => %f)", v.Label, v.Data)
+		return fmt.Sprintf("Value(%s => %f) [ GRAD: %f ]", v.Label, v.Data, v.Grad)
 	}
-	return fmt.Sprintf("OP [ %s ] %s => %f", v.Op, v.Label, v.Data)
+	return fmt.Sprintf("OP [ %s ] %s => %f [ GRAD: %f ]", v.Op, v.Label, v.Data, v.Grad)
+}
+
+func getTopologicalOrder(v *Value) []*Value {
+	order := []*Value{}
+	visited := map[*Value]bool{}
+
+	var dfs func(v *Value)
+	dfs = func(v *Value) {
+		if visited[v] {
+			return
+		}
+		visited[v] = true
+		for _, child := range v.Children {
+			dfs(child)
+		}
+		order = append(order, v)
+	}
+	dfs(v)
+
+	// Reverse the order to get the topological order
+	for i, j := 0, len(order)-1; i < j; i, j = i+1, j-1 {
+		order[i], order[j] = order[j], order[i]
+	}
+
+	return order
+}
+
+func (v *Value) BackProp() {
+	order := getTopologicalOrder(v)
+	for _, node := range order {
+		node.Backward()
+	}
 }
