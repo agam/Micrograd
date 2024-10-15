@@ -10,18 +10,25 @@ import (
 	"github.com/dominikbraun/graph/draw"
 )
 
-func traverse(v *m.Value, g graph.Graph[string, string]) {
+func addVertices(v *m.Value, g graph.Graph[string, string]) {
 	g.AddVertex(v.String())
 	for _, child := range v.Children {
-		g.AddEdge(v.String(), child.String())
-		traverse(child, g)
+		addVertices(child, g)
+	}
+}
+
+func addEdges(v *m.Value, g graph.Graph[string, string]) {
+	for _, child := range v.Children {
+		g.AddEdge(child.String(), v.String())
+		addEdges(child, g)
 	}
 }
 
 func makeTree(v *m.Value) graph.Graph[string, string] {
 	g := graph.New(graph.StringHash, graph.Directed(), graph.Acyclic())
 
-	traverse(v, g)
+	addVertices(v, g)
+	addEdges(v, g)
 
 	return g
 }
@@ -53,3 +60,5 @@ func main() {
 	nn := x1w1x2w2.Add(b, "nn")
 	o := nn.Tanh()
 
+	writeDot(o)
+}
