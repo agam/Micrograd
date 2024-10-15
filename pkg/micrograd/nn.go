@@ -14,6 +14,10 @@ type Value struct {
 	Backward func()
 }
 
+func NewConst(data float64) *Value {
+	return &Value{Data: data, Children: []*Value{}, Op: "", Label: "CONST", Grad: 0.0}
+}
+
 func NewValue(data float64, label string) *Value {
 	value := &Value{Data: data, Children: []*Value{}, Op: "", Label: label, Grad: 0.0}
 	value.Backward = func() {}
@@ -47,13 +51,39 @@ func (v *Value) Mul(other *Value, label string) *Value {
 func (v *Value) Tanh(label string) *Value {
 	x := v.Data
 	t := (math.Exp(2*x) - 1) / (math.Exp(2*x) + 1)
-	out := NewValueWithOp(t, []*Value{v}, " tanh", v.Label)
+	out := NewValueWithOp(t, []*Value{v}, " tanh ", label)
 	backward := func() {
 		v.Grad += (1 - t*t) * out.Grad
 	}
 	out.Backward = backward
 
 	return out
+}
+
+func (v *Value) Exp(label string) *Value {
+	out := NewValueWithOp(math.Exp(v.Data), []*Value{v}, " exp ", label)
+	backward := func() {
+		v.Grad += out.Grad * out.Data
+	}
+	out.Backward = backward
+	return out
+}
+
+func (v *Value) Pow(other *Value, label string) *Value {
+	out := NewValueWithOp(math.Pow(v.Data, other.Data), []*Value{v, other}, " pow ", label)
+	backward := func() {
+		v.Grad += other.Data * math.Pow(v.Data, other.Data-1) * out.Grad
+	}
+	out.Backward = backward
+	return out
+}
+
+func (v *Value) Div(other *Value, label string) *Value {
+	return v.Pow(other.Neg(label), label)
+}
+
+func (v *Value) Neg(label string) *Value {
+	return v.Mul(NewConst(-1.0), label)
 }
 
 func (v *Value) String() string {
