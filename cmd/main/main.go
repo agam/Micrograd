@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	m "github.com/agam/Micrograd"
 )
 
@@ -66,21 +64,8 @@ func RealMLP() {
 		m.NewValue(1.0, "y4"),
 	}
 	mlp := m.NewMLP(3, []int{4, 4, 1})
-	ypred := make([]*m.Value, len(xs))
-	for i, x := range xs {
-		ypred[i] = mlp.Call(x)[0]
-	}
-	loss := m.Loss(ys, ypred)
-	loss.Grad = 1.0
-	loss.BackProp()
 
-	fmt.Printf("ypred: %v\n", ypred)
-	fmt.Printf("Loss => %f\n", loss.Data)
-	for i, n := range mlp.Layers[0].Neurons {
-		fmt.Printf("[L0] Neuron %d => %f [W0]\n", i, n.Weights[0].Grad)
-	}
-
-	WriteDot(loss)
+	mlp.Train(xs, ys, 20, 0.1)
 }
 
 func main() {

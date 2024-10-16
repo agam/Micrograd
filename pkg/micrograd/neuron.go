@@ -20,6 +20,10 @@ func NewNeuron(numInputs int) *Neuron {
 	return &Neuron{Weights: weights, Bias: bias}
 }
 
+func (n *Neuron) Parameters() []*Value {
+	return append(n.Weights, n.Bias)
+}
+
 func (n *Neuron) Call(inputs []*Value) *Value {
 	sum := NewConst(0.0)
 	for i, input := range inputs {
@@ -50,6 +54,14 @@ func (l *Layer) Call(inputs []*Value) []*Value {
 	return outputs
 }
 
+func (l *Layer) Parameters() []*Value {
+	params := make([]*Value, 0)
+	for _, neuron := range l.Neurons {
+		params = append(params, neuron.Parameters()...)
+	}
+	return params
+}
+
 type MLP struct {
 	Layers []*Layer
 }
@@ -68,4 +80,37 @@ func (m *MLP) Call(inputs []*Value) []*Value {
 		inputs = layer.Call(inputs)
 	}
 	return inputs
+}
+
+func (m *MLP) Parameters() []*Value {
+	params := make([]*Value, 0)
+	for _, layer := range m.Layers {
+		params = append(params, layer.Parameters()...)
+	}
+	return params
+}
+
+func (m *MLP) Train(xs [][]*Value, ys []*Value, epochs int, lr float64) {
+	for i := 0; i < epochs; i++ {
+		// Forward pass
+		ypred := make([]*Value, len(xs))
+		for i, x := range xs {
+			ypred[i] = m.Call(x)[0]
+		}
+		loss := Loss(ys, ypred)
+		fmt.Printf("Iter %d Loss => %f\n", i, loss.Data)
+
+		// Reset gradients
+		for _, p := range m.Parameters() {
+			p.Grad = 0.0
+		}
+		// Backward pass
+		loss.Grad = 1.0
+		loss.BackProp()
+
+		// Update parameters
+		for _, p := range m.Parameters() {
+			p.Data -= lr * p.Grad
+		}
+	}
 }
