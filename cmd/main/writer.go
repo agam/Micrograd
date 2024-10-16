@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	m "github.com/agam/Micrograd"
+	m "github.com/agam/Micrograd/pkg/micrograd"
 
 	"github.com/dominikbraun/graph"
 	"github.com/dominikbraun/graph/draw"

@@ -1,7 +1,7 @@
 package main
 
 import (
-	m "github.com/agam/Micrograd"
+	m "github.com/agam/Micrograd/pkg/micrograd"
 )
 
 func simpleNN() {
