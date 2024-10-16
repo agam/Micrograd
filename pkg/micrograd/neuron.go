@@ -56,7 +56,7 @@ type MLP struct {
 
 func NewMLP(numInputs int, numOutputs []int) *MLP {
 	numNeurons := append([]int{numInputs}, numOutputs...)
-	layers := make([]*Layer, len(numNeurons))
+	layers := make([]*Layer, len(numNeurons)-1)
 	for i := 0; i < len(numNeurons)-1; i++ {
 		layers[i] = NewLayer(numNeurons[i], numNeurons[i+1])
 	}
@@ -65,7 +65,6 @@ func NewMLP(numInputs int, numOutputs []int) *MLP {
 
 func (m *MLP) Call(inputs []*Value) []*Value {
 	for _, layer := range m.Layers {
-		fmt.Println("Debug: calling ...")
 		inputs = layer.Call(inputs)
 	}
 	return inputs

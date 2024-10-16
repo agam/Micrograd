@@ -15,7 +15,9 @@ type Value struct {
 }
 
 func NewConst(data float64) *Value {
-	return &Value{Data: data, Children: []*Value{}, Op: "", Label: "CONST", Grad: 0.0}
+	value := &Value{Data: data, Children: []*Value{}, Op: "", Label: "CONST", Grad: 0.0}
+	value.Backward = func() {}
+	return value
 }
 
 func NewValue(data float64, label string) *Value {
@@ -36,6 +38,10 @@ func (v *Value) Add(other *Value, label string) *Value {
 	}
 	out.Backward = backward
 	return out
+}
+
+func (v *Value) Sub(other *Value, label string) *Value {
+	return v.Add(other.Neg(" -neg "), label)
 }
 
 func (v *Value) Mul(other *Value, label string) *Value {
@@ -123,4 +129,14 @@ func (v *Value) BackProp() {
 	for _, node := range order {
 		node.Backward()
 	}
+}
+
+func Loss(ys, ypred []*Value) *Value {
+	out := NewValue(0, "loss")
+	for i, y := range ys {
+		diff := y.Sub(ypred[i], fmt.Sprintf("(%f - %f)", y.Data, ypred[i].Data))
+		diffSquared := diff.Pow(NewConst(2), fmt.Sprintf("(%f - %f)^2", y.Data, ypred[i].Data))
+		out = out.Add(diffSquared, fmt.Sprintf(" Loss - %d ", i))
+	}
+	return out
 }
